@@ -1,1 +1,2 @@
 source "$BR2_EXTERNAL_KERNELCI_PATH/package/bootrr/Config.in"
+source "$BR2_EXTERNAL_KERNELCI_PATH/package/util-linux-dmesg/Config.in"
