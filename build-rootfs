@@ -1,24 +1,24 @@
 #!/bin/bash
 D=$(dirname $0)
 
-rm .config
-make defconfig
+rm -f .config
+make -C ../buildroot  BR2_EXTERNAL=$(pwd) O=$(pwd) defconfig
 
 FRAGMENTS=()
 if [[ $1 =~ ^arm.* ]]; then
   FRAGMENTS+=("arm")
 fi
-  
+
 FRAGMENTS+=("base")
 FRAGMENTS+=("$*") # ensure passed-in frags override base
 
-echo ${FRAGMENTS[@]}
+echo "using fragments: " ${FRAGMENTS[@]}
 for frag in ${FRAGMENTS[@]}; do
-  if [ -e $D/$frag.config ]; then
+  if [ -e $D/configs/frags/$frag.config ]; then
     echo "INFO: Including fragment: $frag"
-    cat $D/$frag.config >> .config
+    cat $D/configs/frags/$frag.config >> .config
   else
-    echo "WARNING: $D/$frag.config doesn't exist.  Giving up."
+    echo "WARNING: $D/configs/frags/$frag.config doesn't exist.  Giving up."
     exit 1
   fi
 done
@@ -33,8 +33,8 @@ if [ $RESULT != 0 ]; then
     exit $RESULT
 fi
 
-# remove uncompressed versions of rootfs 
-(cd output/images; rm -f rootfs.cpio rootfs.tar rootfs.ext2)
+# remove uncompressed versions of rootfs
+(cd images; rm -f rootfs.cpio rootfs.tar rootfs.ext2)
 
 if [ $? = 0 ]; then
     echo "Packaging up output/host directory"
