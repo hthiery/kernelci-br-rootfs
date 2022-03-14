@@ -1,8 +1,14 @@
 #!/bin/bash
-D=$(dirname $0)
+D=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-rm -f .config
-make -C ../buildroot  BR2_EXTERNAL=$(pwd) O=$(pwd) defconfig
+git submodule init
+git submodule update
+
+rm -rf output
+mkdir output
+pushd output
+
+make -C ../buildroot  BR2_EXTERNAL=../buildroot-external O=$(pwd) defconfig
 
 FRAGMENTS=()
 if [[ $1 =~ ^arm.* ]]; then
@@ -14,11 +20,11 @@ FRAGMENTS+=("$*") # ensure passed-in frags override base
 
 echo "using fragments: " ${FRAGMENTS[@]}
 for frag in ${FRAGMENTS[@]}; do
-  if [ -e $D/configs/frags/$frag.config ]; then
+  if [ -e $D/buildroot-external/configs/frags/$frag.config ]; then
     echo "INFO: Including fragment: $frag"
-    cat $D/configs/frags/$frag.config >> .config
+    cat $D/buildroot-external/configs/frags/$frag.config >> .config
   else
-    echo "WARNING: $D/configs/frags/$frag.config doesn't exist.  Giving up."
+    echo "WARNING: $D/buildroot-external/configs/frags/$frag.config doesn't exist.  Giving up."
     exit 1
   fi
 done
@@ -38,6 +44,6 @@ fi
 
 if [ $? = 0 ]; then
     echo "Packaging up output/host directory"
-    tar -C output/host -Jcf output/images/host.tar.xz .
-    (cd output/images; md5sum host.tar.xz > host.tar.xz.md5)
+    tar -C host -Jcf images/host.tar.xz .
+    (cd images; md5sum host.tar.xz > host.tar.xz.md5)
 fi
